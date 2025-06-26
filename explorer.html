@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>World Explorer</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.113/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.113/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+  <style>
+    html, body, #cesiumContainer {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: sans-serif;
+    }
+
+    #searchBar {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      z-index: 10;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #searchInput {
+      width: 300px;
+      padding: 8px;
+      font-size: 1em;
+    }
+
+    #infoBox {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      width: 300px;
+      background: rgba(255,255,255,0.95);
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      font-size: 0.9em;
+      z-index: 10;
+      display: none;
+    }
+
+    #infoBox a {
+      color: #3367d6;
+      text-decoration: none;
+    }
+
+    #infoBox a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+
+  <div id="searchBar">
+    <input type="text" id="searchInput" placeholder="Enter a city, country or landmark name">
+    <button onclick="searchLocation()">Search</button>
+  </div>
+
+  <div id="infoBox"></div>
+
+  <script>
+    // توكن Cesium Ion الخاص بك
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNWQ5ZWYxMi0yNTViLTRhZmItYTg1Yi0wODVhYjJjZTY0ZGYiLCJpZCI6MzEzMTE4LCJpYXQiOjE3NTA3Njc5NTJ9.fIpEryemLcjeyKne7RDuei4AzyjhWxDmfLS1MEhTS6c';
+
+    // تهيئة Cesium Viewer
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      terrainProvider: Cesium.createWorldTerrain(),
+      imageryProvider: new Cesium.IonImageryProvider({ assetId: 2 }), // Bing Maps
+      shouldAnimate: true
+    });
+    viewer.scene.globe.enableLighting = false;
+
+    // دالة البحث
+    async function searchLocation() {
+      const query = document.getElementById("searchInput").value.trim();
+      const infoBox = document.getElementById("infoBox");
+      if (!query) return;
+
+      // البحث عن الإحداثيات باستخدام Nominatim (OpenStreetMap)
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (!data.length) {
+        infoBox.style.display = "block";
+        infoBox.innerHTML = `<strong>Not found:</strong> ${query}`;
+        return;
+      }
+
+      const lat = parseFloat(data[0].lat);
+      const lon = parseFloat(data[0].lon);
+
+      // تحريك الكاميرا إلى الموقع
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(lon, lat, 2000),
+        orientation: { pitch: Cesium.Math.toRadians(-45) }
+      });
+
+      // عرض مربع المعلومات
+      infoBox.innerHTML = `
+        <strong>${query}</strong><br>
+        <a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank">
+          Search on Google 🔎
+        </a>
+      `;
+      infoBox.style.display = "block";
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>World Explorer</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #4b79a1, #283e51);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+    p.privacy {
+      font-size: 0.9em;
+      margin-top: 40px;
+      color: #dddddd;
+      max-width: 400px;
+    }
+    button {
+      background: #4CAF50;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.2em;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <h1>Search any place in the world,<br>and we’ll show it to you.</h1>
+  <button onclick="window.location.href='explorer.html'">Let's Start</button>
+  <p class="privacy">
+    We use cookies for advertising purposes only.
+  </p>
+</body>
+</html>
