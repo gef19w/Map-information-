@@ -49,15 +49,6 @@
       display: none;
     }
 
-    #infoBox a {
-      color: #3367d6;
-      text-decoration: none;
-    }
-
-    #infoBox a:hover {
-      text-decoration: underline;
-    }
-
     #loadingStatus {
       position: absolute;
       top: 80px;
@@ -84,20 +75,23 @@
   <div id="infoBox"></div>
 
   <script>
-    // توكن Cesium Ion الخاص بك
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNWQ5ZWYxMi0yNTViLTRhZmItYTg1Yi0wODVhYjJjZTY0ZGYiLCJpZCI6MzEzMTE4LCJpYXQiOjE3NTA3Njc5NTJ9.fIpEryemLcjeyKne7RDuei4AzyjhWxDmfLS1MEhTS6c';
-
     let viewer;
 
     try {
+      // لا نستخدم Cesium Ion ولا توكن
       viewer = new Cesium.Viewer('cesiumContainer', {
-        terrainProvider: Cesium.createWorldTerrain(),
-        imageryProvider: new Cesium.IonImageryProvider({ assetId: 2 }), // Bing Maps
+        imageryProvider: new Cesium.UrlTemplateImageryProvider({
+          url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+        }),
+        baseLayerPicker: false,
+        timeline: false,
+        animation: false,
         shouldAnimate: true
       });
+
       viewer.scene.globe.enableLighting = false;
     } catch (error) {
-      alert("Failed to load the Cesium map. Please check your connection or token.");
+      alert("Failed to load the Cesium map. Please check your connection.");
       console.error(error);
     }
 
@@ -130,7 +124,6 @@
           orientation: { pitch: Cesium.Math.toRadians(-45) }
         });
 
-        // إظهار معلومات البحث
         infoBox.innerHTML = `
           <strong>${query}</strong><br>
           <a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank">
