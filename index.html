@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +7,7 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #4b79a1, #283e51);
+      background: linear-gradient(to right, #8B0000, #2F1B1B); /* أحمر معدني */
       color: white;
       display: flex;
       flex-direction: column;
@@ -17,18 +16,14 @@
       height: 100vh;
       text-align: center;
     }
+
     h1 {
       font-size: 2.5em;
       margin-bottom: 20px;
     }
-    p.privacy {
-      font-size: 0.9em;
-      margin-top: 40px;
-      color: #dddddd;
-      max-width: 400px;
-    }
+
     button {
-      background: #4CAF50;
+      background: #c0392b;
       border: none;
       padding: 15px 30px;
       font-size: 1.2em;
@@ -37,16 +32,36 @@
       cursor: pointer;
       transition: background 0.3s;
     }
+
     button:hover {
-      background: #45a049;
+      background: #e74c3c;
+    }
+
+    .privacy-container {
+      position: absolute;
+      bottom: 20px;
+      font-size: 0.9em;
+      color: #dddddd;
+    }
+
+    .privacy-container a {
+      color: #66aaff;
+      text-decoration: none;
+      font-size: 0.9em;
+    }
+
+    .privacy-container a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <h1>Search any place in the world,<br>and we’ll show it to you.</h1>
   <button onclick="window.location.href='explorer.html'">Let's Start</button>
-  <p class="privacy">
-    We use cookies for advertising purposes only.
-  </p>
+
+  <div class="privacy-container">
+    <a href="privacy.html" target="_blank">Privacy Policy</a><br>
+    <span>We use cookies to serve ads and do not store any other user information.</span>
+  </div>
 </body>
 </html>
