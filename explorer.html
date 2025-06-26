@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>World Explorer</title>
+  <title>3D World Explorer</title>
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.113/Build/Cesium/Cesium.js"></script>
   <link href="https://cesium.com/downloads/cesiumjs/releases/1.113/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
   <style>
@@ -12,6 +12,7 @@
       width: 100%;
       height: 100%;
       font-family: sans-serif;
+      overflow: hidden;
     }
 
     #searchBar {
@@ -19,34 +20,54 @@
       top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: white;
+      background: rgba(255,255,255,0.9);
       padding: 10px 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      z-index: 10;
+      border-radius: 25px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+      z-index: 999;
       display: flex;
       gap: 10px;
       align-items: center;
+      backdrop-filter: blur(5px);
     }
 
     #searchInput {
       width: 300px;
-      padding: 8px;
+      padding: 10px 15px;
       font-size: 1em;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      outline: none;
+    }
+
+    #searchBar button {
+      padding: 10px 20px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+
+    #searchBar button:hover {
+      background: #45a049;
     }
 
     #infoBox {
       position: absolute;
       bottom: 20px;
       left: 20px;
-      width: 300px;
+      max-width: 300px;
       background: rgba(255,255,255,0.95);
       padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      border-radius: 10px;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.2);
       font-size: 0.9em;
-      z-index: 10;
+      z-index: 999;
       display: none;
+      line-height: 1.5;
     }
 
     #loadingStatus {
@@ -56,10 +77,15 @@
       transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.7);
       color: white;
-      padding: 10px 20px;
-      border-radius: 8px;
-      z-index: 10;
+      padding: 12px 25px;
+      border-radius: 25px;
+      z-index: 999;
       display: none;
+      font-size: 0.9em;
+    }
+
+    .cesium-viewer-toolbar {
+      top: 80px !important;
     }
   </style>
 </head>
@@ -67,32 +93,64 @@
   <div id="cesiumContainer"></div>
 
   <div id="searchBar">
-    <input type="text" id="searchInput" placeholder="Enter a city, country or landmark name">
-    <button onclick="searchLocation()">Search</button>
+    <input type="text" id="searchInput" placeholder="Search for a city, country or landmark..." autocomplete="off">
+    <button onclick="searchLocation()">Explore</button>
   </div>
 
-  <div id="loadingStatus">Loading map...</div>
+  <div id="loadingStatus">Loading location data...</div>
   <div id="infoBox"></div>
 
   <script>
     let viewer;
+    let currentEntity = null;
 
     try {
-      // لا نستخدم Cesium Ion ولا توكن
+      // Initialize Cesium Viewer with better default settings
       viewer = new Cesium.Viewer('cesiumContainer', {
         imageryProvider: new Cesium.UrlTemplateImageryProvider({
-          url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+          url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          subdomains: ['a', 'b', 'c']
         }),
         baseLayerPicker: false,
         timeline: false,
         animation: false,
-        shouldAnimate: true
+        sceneMode: Cesium.SceneMode.SCENE3D,
+        shouldAnimate: true,
+        skyAtmosphere: false,
+        skyBox: false,
+        selectionIndicator: false,
+        homeButton: false,
+        scene3DOnly: true,
+        terrainProvider: Cesium.createWorldTerrain()
       });
 
-      viewer.scene.globe.enableLighting = false;
+      // Improve visual quality
+      viewer.scene.globe.enableLighting = true;
+      viewer.scene.fog.enabled = false;
+      viewer.scene.highDynamicRange = true;
+      viewer.scene.globe.depthTestAgainstTerrain = true;
+      
+      // Set initial view to whole Earth
+      viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000),
+        orientation: {
+          heading: 0.0,
+          pitch: -Cesium.Math.PI_OVER_TWO,
+          roll: 0.0
+        }
+      });
+
+      // Add event listener for Enter key in search input
+      document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          searchLocation();
+        }
+      });
+
     } catch (error) {
-      alert("Failed to load the Cesium map. Please check your connection.");
-      console.error(error);
+      document.getElementById('loadingStatus').style.display = 'block';
+      document.getElementById('loadingStatus').textContent = 'Failed to load 3D map. Please check your connection.';
+      console.error('Cesium initialization error:', error);
     }
 
     async function searchLocation() {
@@ -100,44 +158,106 @@
       const infoBox = document.getElementById("infoBox");
       const loadingStatus = document.getElementById("loadingStatus");
 
-      if (!query) return;
+      if (!query) {
+        infoBox.innerHTML = '<strong>Please enter a location to search</strong>';
+        infoBox.style.display = 'block';
+        setTimeout(() => { infoBox.style.display = 'none'; }, 2000);
+        return;
+      }
 
       loadingStatus.style.display = "block";
-      loadingStatus.textContent = "Loading map...";
+      loadingStatus.textContent = `Searching for "${query}"...`;
 
       try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-        const res = await fetch(url);
-        const data = await res.json();
+        // Clear previous entity if exists
+        if (currentEntity) {
+          viewer.entities.remove(currentEntity);
+        }
 
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=1`
+        );
+        
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        
         if (!data.length) {
           loadingStatus.textContent = `Location not found: ${query}`;
           infoBox.style.display = "none";
           return;
         }
 
-        const lat = parseFloat(data[0].lat);
-        const lon = parseFloat(data[0].lon);
+        const result = data[0];
+        const lat = parseFloat(result.lat);
+        const lon = parseFloat(result.lon);
+        const displayName = result.display_name || query;
+        const type = result.type || 'location';
+        const address = result.address || {};
 
-        viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(lon, lat, 2000),
-          orientation: { pitch: Cesium.Math.toRadians(-45) }
+        // Create a pin at the location
+        currentEntity = viewer.entities.add({
+          name: displayName,
+          position: Cesium.Cartesian3.fromDegrees(lon, lat),
+          point: {
+            pixelSize: 15,
+            color: Cesium.Color.RED,
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 2
+          },
+          label: {
+            text: displayName,
+            font: '14pt sans-serif',
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            outlineWidth: 2,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset: new Cesium.Cartesian2(0, -10),
+            fillColor: Cesium.Color.WHITE,
+            outlineColor: Cesium.Color.BLACK
+          }
         });
 
-        infoBox.innerHTML = `
-          <strong>${query}</strong><br>
-          <a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank">
-            Search on Google 🔎
+        // Fly to the location with smooth animation
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(lon, lat, 2000),
+          orientation: {
+            heading: Cesium.Math.toRadians(0),
+            pitch: Cesium.Math.toRadians(-45),
+            roll: 0.0
+          },
+          duration: 2,
+          complete: function() {
+            loadingStatus.style.display = "none";
+          }
+        });
+
+        // Prepare info box content
+        let infoContent = `<strong>${displayName}</strong><br><small>${type}</small>`;
+        
+        if (address.country) {
+          infoContent += `<br>Country: ${address.country}`;
+        }
+        if (address.city || address.town || address.village) {
+          infoContent += `<br>Place: ${address.city || address.town || address.village}`;
+        }
+        
+        infoContent += `
+          <br><br>
+          <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" style="color: #4CAF50; text-decoration: none;">
+            View on Google Maps 🌍
           </a>
         `;
+
+        infoBox.innerHTML = infoContent;
         infoBox.style.display = "block";
-        loadingStatus.style.display = "none";
 
       } catch (error) {
-        loadingStatus.textContent = "Error: Unable to complete the search.";
-        console.error(error);
+        loadingStatus.textContent = "Error: Unable to complete the search";
+        infoBox.innerHTML = `<strong>Error:</strong> ${error.message}`;
+        infoBox.style.display = "block";
+        console.error('Search error:', error);
       }
     }
   </script>
 </body>
-</html>
+  </html>
