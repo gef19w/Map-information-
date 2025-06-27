@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <title>World Explorer</title>
+
+  <!-- AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8628438411512630"
+     crossorigin="anonymous"></script>
+
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.113/Build/Cesium/Cesium.js"></script>
   <link href="https://cesium.com/downloads/cesiumjs/releases/1.113/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
   <style>
@@ -78,7 +83,6 @@
     let viewer;
 
     try {
-      // لا نستخدم Cesium Ion ولا توكن
       viewer = new Cesium.Viewer('cesiumContainer', {
         imageryProvider: new Cesium.UrlTemplateImageryProvider({
           url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
@@ -88,7 +92,6 @@
         animation: false,
         shouldAnimate: true
       });
-
       viewer.scene.globe.enableLighting = false;
     } catch (error) {
       alert("Failed to load the Cesium map. Please check your connection.");
@@ -140,4 +143,4 @@
     }
   </script>
 </body>
-</html>
+    </html>
