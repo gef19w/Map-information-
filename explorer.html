@@ -4,12 +4,10 @@
   <meta charset="UTF-8" />
   <title>World Explorer</title>
 
-  <!-- AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8628438411512630"
-     crossorigin="anonymous"></script>
-
+  <!-- CesiumJS -->
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.113/Build/Cesium/Cesium.js"></script>
   <link href="https://cesium.com/downloads/cesiumjs/releases/1.113/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+
   <style>
     html, body, #cesiumContainer {
       margin: 0;
@@ -18,7 +16,6 @@
       height: 100%;
       font-family: sans-serif;
     }
-
     #searchBar {
       position: absolute;
       top: 20px;
@@ -33,13 +30,11 @@
       gap: 10px;
       align-items: center;
     }
-
     #searchInput {
       width: 300px;
       padding: 8px;
       font-size: 1em;
     }
-
     #infoBox {
       position: absolute;
       bottom: 20px;
@@ -53,7 +48,6 @@
       z-index: 10;
       display: none;
     }
-
     #loadingStatus {
       position: absolute;
       top: 80px;
@@ -70,18 +64,15 @@
 </head>
 <body>
   <div id="cesiumContainer"></div>
-
   <div id="searchBar">
     <input type="text" id="searchInput" placeholder="Enter a city, country or landmark name">
     <button onclick="searchLocation()">Search</button>
   </div>
-
   <div id="loadingStatus">Loading map...</div>
   <div id="infoBox"></div>
 
   <script>
     let viewer;
-
     try {
       viewer = new Cesium.Viewer('cesiumContainer', {
         imageryProvider: new Cesium.UrlTemplateImageryProvider({
@@ -102,31 +93,24 @@
       const query = document.getElementById("searchInput").value.trim();
       const infoBox = document.getElementById("infoBox");
       const loadingStatus = document.getElementById("loadingStatus");
-
       if (!query) return;
-
       loadingStatus.style.display = "block";
       loadingStatus.textContent = "Loading map...";
-
       try {
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
         const res = await fetch(url);
         const data = await res.json();
-
         if (!data.length) {
           loadingStatus.textContent = `Location not found: ${query}`;
           infoBox.style.display = "none";
           return;
         }
-
         const lat = parseFloat(data[0].lat);
         const lon = parseFloat(data[0].lon);
-
         viewer.camera.flyTo({
           destination: Cesium.Cartesian3.fromDegrees(lon, lat, 2000),
           orientation: { pitch: Cesium.Math.toRadians(-45) }
         });
-
         infoBox.innerHTML = `
           <strong>${query}</strong><br>
           <a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank">
@@ -135,7 +119,6 @@
         `;
         infoBox.style.display = "block";
         loadingStatus.style.display = "none";
-
       } catch (error) {
         loadingStatus.textContent = "Error: Unable to complete the search.";
         console.error(error);
@@ -143,4 +126,4 @@
     }
   </script>
 </body>
-    </html>
+</html>
